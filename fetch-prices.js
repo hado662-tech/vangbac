@@ -10,7 +10,6 @@ const CONFIG = {
 
 // Giá mặc định (fallback)
 let currentPrices = {
-    // Thời gian sẽ được cập nhật khi chạy
     lastUpdate: "",
     quyTung: {
         nhanTronTron: { buy: 16702, sell: 17298 },
@@ -105,10 +104,9 @@ async function fetchExternalAPI() {
     return false;
 }
 
-// Thay thế Puppeteer bằng Axios + Cheerio (Nhẹ hơn gấp 10 lần)
 async function scrapeKimTin() {
     try {
-        console.log('� Fetching Kim Tín (Axios/Cheerio)...');
+        console.log('📡 Fetching Kim Tín (Axios/Cheerio)...');
         const response = await axios.get('https://kimtin.vn/bieu-do-gia-vang', {
             headers: { 'User-Agent': CONFIG.userAgent },
             timeout: 10000
@@ -142,7 +140,7 @@ async function scrapeKimTin() {
                 const sell = parseInt(sellText.replace(/\D/g, ''));
 
                 if (!isNaN(buy) && !isNaN(sell)) {
-                    console.log(`🔍 Found: ${typeText} | ${buy} - ${sell}`);
+                    // console.log(`🔍 Found: ${typeText} | ${buy} - ${sell}`);
 
                     if (typeText.includes('NHẪN TRÒN')) {
                         results.nhanTron = { buy, sell };
@@ -208,6 +206,82 @@ function syncLocalPrices() {
 function writePricesFile() {
     const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+    const outputData = {
+        quyTung: {
+            name: "Vàng Bạc Quý Tùng",
+            address: "142 Lương Ngọc Quyến, TP. Thái Nguyên",
+            phone: "",
+            website: "",
+            products: [
+                { name: "Nhẫn tròn trơn", desc: "Vàng 999.9 nguyên chất", purity: "999.9", purityLabel: "24K", buy: currentPrices.quyTung.nhanTronTron.buy, sell: currentPrices.quyTung.nhanTronTron.sell },
+                { name: "Nhẫn tròn ép vỉ", desc: "Vàng 999.9 nguyên chất", purity: "999.9", purityLabel: "24K", buy: currentPrices.quyTung.nhanEpVi.buy, sell: currentPrices.quyTung.nhanEpVi.sell },
+                { name: "Vàng miếng SJC", desc: "Vàng miếng chính hãng SJC", purity: "999.9", purityLabel: "24K", buy: currentPrices.quyTung.sjc.buy, sell: currentPrices.quyTung.sjc.sell },
+                { name: "Trang sức 18K", desc: "Trang sức vàng 750", purity: "750", purityLabel: "18K", buy: currentPrices.quyTung.trangSuc18K.buy, sell: currentPrices.quyTung.trangSuc18K.sell }
+            ]
+        },
+        kimTin: {
+            name: "Tập Đoàn Kim Tín",
+            address: "56 Lương Ngọc Quyến, TP. Thái Nguyên",
+            phone: "",
+            website: "kimtin.vn",
+            products: [
+                { name: "Nhẫn tròn trơn", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: currentPrices.kimTin.nhanTronTron.buy, sell: currentPrices.kimTin.nhanTronTron.sell },
+                { name: "Nhẫn tròn ép vỉ", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: currentPrices.kimTin.nhanEpVi.buy, sell: currentPrices.kimTin.nhanEpVi.sell },
+                { name: "Quà mừng vàng", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: currentPrices.kimTin.quaMung.buy, sell: currentPrices.kimTin.quaMung.sell },
+                { name: "Vàng miếng SJC", desc: "Vàng miếng chính hãng SJC", purity: "999.9", purityLabel: "24K", buy: currentPrices.kimTin.sjc.buy, sell: currentPrices.kimTin.sjc.sell },
+                { name: "Trang sức 18K", desc: "Trang sức vàng 750", purity: "750", purityLabel: "18K", buy: currentPrices.kimTin.trangSuc18K.buy, sell: currentPrices.kimTin.trangSuc18K.sell }
+            ]
+        },
+        btmc: {
+            name: "Bảo Tín Minh Châu",
+            address: "Toàn quốc",
+            phone: "1800.599.920",
+            website: "btmc.vn",
+            hasApi: true,
+            apiNote: "Lấy từ BTMC API",
+            products: [
+                { name: "Nhẫn Trơn 999.9", desc: "Vàng nhẫn tròn trơn BTMC", purity: "999.9", purityLabel: "24K", buy: currentPrices.btmc.nhanTron.buy, sell: currentPrices.btmc.nhanTron.sell },
+                { name: "Nhẫn Rồng Phụng", desc: "Vàng nhẫn họa tiết BTMC", purity: "999.9", purityLabel: "24K", buy: currentPrices.btmc.nhanRongPhung.buy, sell: currentPrices.btmc.nhanRongPhung.sell },
+                { name: "Vàng miếng SJC", desc: "Vàng miếng SJC chính hãng", purity: "999.9", purityLabel: "24K", buy: currentPrices.btmc.sjc.buy, sell: currentPrices.btmc.sjc.sell }
+            ]
+        },
+        sjc: {
+            name: "SJC (Vàng Bạc SG)",
+            address: "Toàn quốc",
+            phone: "1900.54.54.78",
+            website: "sjc.com.vn",
+            hasApi: true,
+            apiNote: "Lấy từ SJC",
+            products: [
+                { name: "Vàng miếng SJC 1L", desc: "Vàng miếng SJC 1 lượng", purity: "999.9", purityLabel: "24K", buy: currentPrices.sjc.sjc1L.buy, sell: currentPrices.sjc.sjc1L.sell },
+                { name: "Vàng nhẫn SJC 99.99", desc: "Nhẫn tròn trơn SJC", purity: "999.9", purityLabel: "24K", buy: currentPrices.sjc.nhan9999.buy, sell: currentPrices.sjc.nhan9999.sell },
+                { name: "Vàng nữ trang 99.99", desc: "Trang sức vàng 24K", purity: "999.9", purityLabel: "24K", buy: currentPrices.sjc.nuTrang.buy, sell: currentPrices.sjc.nuTrang.sell }
+            ]
+        },
+        pnj: {
+            name: "PNJ",
+            address: "Vincom Thái Nguyên",
+            phone: "1800.54.54.57",
+            website: "pnj.com.vn",
+            hasApi: false,
+            products: [
+                { name: "Vàng miếng SJC", desc: "Vàng miếng SJC chính hãng", purity: "999.9", purityLabel: "24K", buy: currentPrices.pnj.sjc.buy, sell: currentPrices.pnj.sjc.sell },
+                { name: "Nhẫn tròn PNJ 24K", desc: "Nhẫn vàng 999.9 PNJ", purity: "999.9", purityLabel: "24K", buy: currentPrices.pnj.nhan24K.buy, sell: currentPrices.pnj.nhan24K.sell }
+            ]
+        },
+        doji: {
+            name: "DOJI",
+            address: "Toàn quốc",
+            phone: "1800.1168",
+            website: "doji.vn",
+            hasApi: false,
+            products: [
+                { name: "Hưng Thịnh Vượng", desc: "Vàng miếng DOJI", purity: "999.9", purityLabel: "24K", buy: currentPrices.doji.hungThinhVuong.buy, sell: currentPrices.doji.hungThinhVuong.sell },
+                { name: "Nhẫn tròn DOJI", desc: "Nhẫn vàng 999.9 DOJI", purity: "999.9", purityLabel: "24K", buy: currentPrices.doji.nhanTron.buy, sell: currentPrices.doji.nhanTron.sell }
+            ]
+        }
+    };
+
     const pricesContent = `// ==========================================
 // GIÁ VÀNG THÁI NGUYÊN - TỰ ĐỘNG CẬP NHẬT
 // Nguồn: BTMC, SJC, DOJI + tham khảo Kim Tín
@@ -215,119 +289,9 @@ function writePricesFile() {
 
 const LAST_UPDATE = "${vnTime}";
 
-const GOLD_PRICES = {
-    quyTung: {
-        name: "Vàng Bạc Quý Tùng",
-        address: "142 Lương Ngọc Quyến, TP. Thái Nguyên",
-        phone: "",
-        website: "",
-        products: [
-            { name: "Nhẫn tròn trơn", desc: "Vàng 999.9 nguyên chất", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.quyTung.nhanTronTron.buy}, sell: ${currentPrices.quyTung.nhanTronTron.sell} },
-            { name: "Nhẫn tròn ép vỉ", desc: "Vàng 999.9 nguyên chất", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.quyTung.nhanEpVi.buy}, sell: ${currentPrices.quyTung.nhanEpVi.sell} },
-            { name: "Vàng miếng SJC", desc: "Vàng miếng chính hãng SJC", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.quyTung.sjc.buy}, sell: ${currentPrices.quyTung.sjc.sell} },
-            { name: "Trang sức 18K", desc: "Trang sức vàng 750", purity: "750", purityLabel: "18K", buy: ${currentPrices.quyTung.trangSuc18K.buy}, sell: ${currentPrices.quyTung.trangSuc18K.sell} }
-        ]
-    },
-    kimTin: {
-        name: "Tập Đoàn Kim Tín",
-        address: "56 Lương Ngọc Quyến, TP. Thái Nguyên",
-        phone: "",
-        website: "kimtin.vn",
-        products: [
-            { name: "Nhẫn tròn trơn", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.kimTin.nhanTronTron.buy}, sell: ${currentPrices.kimTin.nhanTronTron.sell} },
-            { name: "Nhẫn tròn ép vỉ", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.kimTin.nhanEpVi.buy}, sell: ${currentPrices.kimTin.nhanEpVi.sell} },
-            { name: "Quà mừng vàng", desc: "Vàng Rồng Kim Tín 999.9", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.kimTin.quaMung.buy}, sell: ${currentPrices.kimTin.quaMung.sell} },
-            { name: "Vàng miếng SJC", desc: "Vàng miếng chính hãng SJC", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.kimTin.sjc.buy}, sell: ${currentPrices.kimTin.sjc.sell} },
-            { name: "Trang sức 18K", desc: "Trang sức vàng 750", purity: "750", purityLabel: "18K", buy: ${currentPrices.kimTin.trangSuc18K.buy}, sell: ${currentPrices.kimTin.trangSuc18K.sell} }
-        ]
-    },
-    btmc: {
-        name: "Bảo Tín Minh Châu",
-        address: "Toàn quốc",
-        phone: "1800.599.920",
-        website: "btmc.vn",
-        hasApi: true,
-        apiNote: "Lấy từ BTMC API",
-        products: [
-            { name: "Nhẫn Trơn 999.9", desc: "Vàng nhẫn tròn trơn BTMC", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.btmc.nhanTron.buy}, sell: ${currentPrices.btmc.nhanTron.sell} },
-            { name: "Nhẫn Rồng Phụng", desc: "Vàng nhẫn họa tiết BTMC", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.btmc.nhanRongPhung.buy}, sell: ${currentPrices.btmc.nhanRongPhung.sell} },
-            { name: "Vàng miếng SJC", desc: "Vàng miếng SJC chính hãng", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.btmc.sjc.buy}, sell: ${currentPrices.btmc.sjc.sell} }
-        ]
-    },
-    sjc: {
-        name: "SJC (Vàng Bạc SG)",
-        address: "Toàn quốc",
-        phone: "1900.54.54.78",
-        website: "sjc.com.vn",
-        hasApi: true,
-        apiNote: "Lấy từ SJC",
-        products: [
-            { name: "Vàng miếng SJC 1L", desc: "Vàng miếng SJC 1 lượng", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.sjc.sjc1L.buy}, sell: ${currentPrices.sjc.sjc1L.sell} },
-            { name: "Vàng nhẫn SJC 99.99", desc: "Nhẫn tròn trơn SJC", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.sjc.nhan9999.buy}, sell: ${currentPrices.sjc.nhan9999.sell} },
-            { name: "Vàng nữ trang 99.99", desc: "Trang sức vàng 24K", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.sjc.nuTrang.buy}, sell: ${currentPrices.sjc.nuTrang.sell} }
-        ]
-    },
-    pnj: {
-        name: "PNJ",
-        address: "Vincom Thái Nguyên",
-        phone: "1800.54.54.57",
-        website: "pnj.com.vn",
-        hasApi: false,
-        products: [
-            { name: "Vàng miếng SJC", desc: "Vàng miếng SJC chính hãng", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.pnj.sjc.buy}, sell: ${currentPrices.pnj.sjc.sell} },
-            { name: "Nhẫn tròn PNJ 24K", desc: "Nhẫn vàng 999.9 PNJ", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.pnj.nhan24K.buy}, sell: ${currentPrices.pnj.nhan24K.sell} }
-        ]
-    },
-    doji: {
-        name: "DOJI",
-        address: "Toàn quốc",
-        phone: "1800.1168",
-        website: "doji.vn",
-        hasApi: false,
-        products: [
-            { name: "Hưng Thịnh Vượng", desc: "Vàng miếng DOJI", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.doji.hungThinhVuong.buy}, sell: ${currentPrices.doji.hungThinhVuong.sell} },
-            { name: "Nhẫn tròn DOJI", desc: "Nhẫn vàng 999.9 DOJI", purity: "999.9", purityLabel: "24K", buy: ${currentPrices.doji.nhanTron.buy}, sell: ${currentPrices.doji.nhanTron.sell} }
-        ]
-    }
-};
-
-let currentUnit = 'chi';
-const UNIT_CONFIG = {
-    chi: { multiplier: 1, label: '1 Chỉ (3.75g)', shortLabel: '/chỉ', gramWeight: 3.75 },
-    luong: { multiplier: 10, label: '1 Lượng (37.5g)', shortLabel: '/lượng', gramWeight: 37.5 },
-    gram: { multiplier: 1 / 3.75, label: '1 Gram', shortLabel: '/gram', gramWeight: 1 }
-};
-
-function convertPrice(p, u) { return Math.round(p * UNIT_CONFIG[u].multiplier); }
-function formatPrice(p) { return p.toLocaleString('vi-VN'); }
-
-function renderPriceTable(id, key) {
-    const c = document.getElementById(id);
-    if (!c || !GOLD_PRICES[key]) return;
-    const shop = GOLD_PRICES[key];
-    c.innerHTML = '';
-    shop.products.forEach((item, index) => {
-        const row = document.createElement('tr');
-        row.className = "price-row " + (index === 0 ? 'highlight' : '') + (item.name.includes('SJC') ? ' sjc-row' : '');
-        row.innerHTML = ' \
-            <td class="product-info"> \
-                <div class="product-name-main">' + item.name.toUpperCase() + '</div> \
-                <div class="product-desc">' + item.desc + '</div> \
-            </td> \
-            <td class="purity"> \
-                <span class="purity-value">' + item.purity + '</span> \
-                <span class="purity-label">(' + item.purityLabel + ')</span> \
-            </td> \
-            <td class="price buy-price"> \
-                <span class="price-value">' + formatPrice(convertPrice(item.buy, currentUnit)) + '</span> \
-            </td> \
-            <td class="price sell-price"> \
-                <span class="price-value">' + formatPrice(convertPrice(item.sell, currentUnit)) + '</span> \
-            </td>';
-        c.appendChild(row);
-    });
-}
+const GOLD_PRICES = ${JSON.stringify(outputData, null, 4)};
 `;
+    // Write back to prices.js exactly as index.html expects
     fs.writeFileSync('prices.js', pricesContent, 'utf8');
 }
 

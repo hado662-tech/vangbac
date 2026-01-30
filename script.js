@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize animations
     initAnimations();
+
+    // Render Gold Prices
+    initGoldPrices();
 });
 
 // ==========================================
@@ -48,6 +51,87 @@ function updateTime() {
 
 // Update time every second
 setInterval(updateTime, 1000);
+
+// ==========================================
+// GOLD PRICE RENDERING LOGIC
+// ==========================================
+
+let currentUnit = 'chi';
+const UNIT_CONFIG = {
+    chi: { multiplier: 1, label: '1 Chỉ (3.75g)', shortLabel: '/chỉ', gramWeight: 3.75 },
+    luong: { multiplier: 10, label: '1 Lượng (37.5g)', shortLabel: '/lượng', gramWeight: 37.5 },
+    gram: { multiplier: 1 / 3.75, label: '1 Gram', shortLabel: '/gram', gramWeight: 1 }
+};
+
+function convertPrice(p, u) { return Math.round(p * UNIT_CONFIG[u].multiplier); }
+function formatPrice(p) { return p.toLocaleString('vi-VN'); }
+
+function renderPriceTable(id, key) {
+    const c = document.getElementById(id);
+    if (!c || typeof GOLD_PRICES === 'undefined' || !GOLD_PRICES[key]) return;
+
+    const shop = GOLD_PRICES[key];
+    c.innerHTML = '';
+
+    shop.products.forEach((item, index) => {
+        const row = document.createElement('tr');
+        row.className = "price-row " + (index === 0 ? 'highlight' : '') + (item.name.includes('SJC') ? ' sjc-row' : '');
+        row.innerHTML = `
+            <td class="product-info">
+                <div class="product-name-main">${item.name.toUpperCase()}</div>
+                <div class="product-desc">${item.desc}</div>
+            </td>
+            <td class="purity">
+                <span class="purity-value">${item.purity}</span>
+                <span class="purity-label">(${item.purityLabel})</span>
+            </td>
+            <td class="price buy-price">
+                <span class="price-value">${formatPrice(convertPrice(item.buy, currentUnit))}</span>
+            </td>
+            <td class="price sell-price">
+                <span class="price-value">${formatPrice(convertPrice(item.sell, currentUnit))}</span>
+            </td>`;
+        c.appendChild(row);
+    });
+}
+
+function renderAllTables() {
+    ['quyTung', 'kimTin', 'btmc', 'sjc', 'pnj', 'doji'].forEach(k => renderPriceTable(k + 'Prices', k));
+}
+
+function updateUnitLabels() {
+    const config = UNIT_CONFIG[currentUnit];
+    const ud = document.getElementById('unitDescription');
+    if (ud) ud.textContent = "Giá theo " + config.label;
+    document.querySelectorAll('.price-table th .unit').forEach(el => el.textContent = config.shortLabel);
+}
+
+function updateLastUpdateTime() {
+    const el = document.getElementById('lastUpdate');
+    if (el && typeof LAST_UPDATE !== 'undefined') el.textContent = LAST_UPDATE;
+}
+
+function initGoldPrices() {
+    if (typeof GOLD_PRICES === 'undefined') {
+        console.error('⚠️ GOLD_PRICES not loaded!');
+        return;
+    }
+
+    // Unit Switcher logic
+    document.querySelectorAll('.unit-tab').forEach(tab => {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.unit-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            currentUnit = this.dataset.unit;
+            renderAllTables();
+            updateUnitLabels();
+        });
+    });
+
+    renderAllTables();
+    updateUnitLabels();
+    updateLastUpdateTime();
+}
 
 // ==========================================
 // PAGE ANIMATIONS
@@ -98,28 +182,12 @@ document.head.appendChild(style);
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function () {
-    const priceRows = document.querySelectorAll('.price-row');
-
-    priceRows.forEach(row => {
-        row.addEventListener('mouseenter', function () {
-            this.style.transition = 'all 0.2s ease';
-        });
-    });
-});
-
-// ==========================================
-// MOBILE MENU (if needed)
-// ==========================================
-
-document.addEventListener('DOMContentLoaded', function () {
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', function () {
-            // Toggle mobile menu logic here if needed
-            console.log('Mobile menu clicked');
-        });
-    }
+    // Use event delegation for dynamic content
+    document.body.addEventListener('mouseenter', function (e) {
+        if (e.target.closest('.price-row')) {
+            e.target.closest('.price-row').style.transition = 'all 0.2s ease';
+        }
+    }, true);
 });
 
 // ==========================================
@@ -138,22 +206,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
-
-// ==========================================
-// PRICE UPDATE SIMULATION
-// ==========================================
-
-function simulatePriceFlash() {
-    const prices = document.querySelectorAll('.price-value');
-    prices.forEach(price => {
-        price.style.transition = 'all 0.3s ease';
-        price.style.textShadow = '0 0 15px rgba(255, 215, 0, 0.8)';
-
-        setTimeout(() => {
-            price.style.textShadow = '';
-        }, 300);
-    });
-}
 
 // ==========================================
 // CONSOLE BRANDING
