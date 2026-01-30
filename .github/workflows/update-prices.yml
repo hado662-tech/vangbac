@@ -1,10 +1,9 @@
-name: Auto Update Gold Prices (Every 5 Mins)
+name: Auto Update Gold Prices (Optimized)
 
 on:
   schedule:
-    # Chạy mỗi 5 phút từ 7h sáng đến 11h đêm (giờ VN = UTC+7)
-    - cron: '*/5 0-16 * * *' 
-  workflow_dispatch:  # Cho phép chạy thủ công
+    - cron: '*/5 * * * *'  # Chạy mỗi 5 phút
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,12 +11,11 @@ permissions:
 jobs:
   update-prices:
     runs-on: ubuntu-latest
+    timeout-minutes: 5 # Giới hạn 5 phút để tránh treo
     
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
         
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -25,29 +23,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
           
-      - name: Install System Dependencies
+      - name: Install Dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgbm-dev libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcb-dri3-0 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxi6 libxrandr2 libxrender1 libxtst6 libcups2 libdrm2 libxkbcommon0 libasound2
-          
-      - name: Install Node Dependencies
-        run: |
-          npm install
+          npm ci
           npx puppeteer browsers install chrome
-        
+          
+      # Cài đặt tối giản các thư viện thiếu (nếu cần)
+      # Ubuntu 22.04 runner thường đã có đủ, chỉ cài nếu thực sự thiếu để tiết kiệm thời gian
+      
       - name: Run Scraper
         run: node fetch-prices.js
+        env:
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "false"
+          PUPPETEER_EXECUTABLE_PATH: "" # Để puppeteer tự tìm bản chrome nó vừa tải
         
-      - name: Commit and Push (Force Update)
+      - name: Commit and Push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add prices.js
           
-          # Luôn commit vì LAST_UPDATE bên trong prices.js thay đổi mỗi giây
-          if git commit -m "🔄 [Auto] Cập nhật giá vàng - $(TZ='Asia/Ho_Chi_Minh' date '+%H:%M:%S %d/%m/%Y')"; then
-            git pull --rebase origin main
-            git push origin main
-          else
-            echo "Không có thay đổi để cập nhật."
-          fi
+          # Luôn commit để cập nhật timestamp
+          git commit -m "⚡ [Fast Update] Cập nhật giá vàng - $(TZ='Asia/Ho_Chi_Minh' date '+%H:%M %d/%m')" || echo "No changes"
+          
+          # Force push an toàn hơn rebase trong trường hợp này vì chỉ có 1 file thay đổi
+          git pull --rebase origin main
+          git push origin main
