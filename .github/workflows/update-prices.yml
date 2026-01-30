@@ -24,9 +24,7 @@ jobs:
           cache: 'npm'
           
       - name: Install Dependencies
-        run: |
-          npm ci
-          npx puppeteer browsers install chrome
+        run: npm ci
           
       # Cài đặt tối giản các thư viện thiếu (nếu cần)
       # Ubuntu 22.04 runner thường đã có đủ, chỉ cài nếu thực sự thiếu để tiết kiệm thời gian
