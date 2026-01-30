@@ -6,6 +6,10 @@ on:
     - cron: '*/15 0-16 * * *'  # 7AM-11PM VN, Every day
   workflow_dispatch:  # Cho phép chạy thủ công
 
+# Cấp quyền ghi để Action có thể push lên repo
+permissions:
+  contents: write
+
 jobs:
   update-prices:
     runs-on: ubuntu-latest
@@ -20,7 +24,11 @@ jobs:
           node-version: '20'
           
       - name: Install dependencies
-        run: npm install puppeteer axios cheerio
+        run: |
+          npm install puppeteer axios cheerio
+          # Cài đặt thêm các package cần thiết cho Puppeteer trên Linux
+          sudo apt-get update
+          sudo apt-get install -y libgbm-dev
         
       - name: Fetch gold prices with browser
         run: node fetch-prices.js
@@ -32,4 +40,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add prices.js
-          git diff --quiet && git diff --staged --quiet || (git commit -m "🔄 Cập nhật giá vàng - $(TZ='Asia/Ho_Chi_Minh' date '+%d/%m/%Y %H:%M')" && git push)
+          # Luôn commit nếu có thay đổi (timestamp trong prices.js luôn thay đổi mỗi lần chạy)
+          if ! git diff --cached --exit-code; then
+            git commit -m "🔄 Cập nhật giá vàng tự động - $(TZ='Asia/Ho_Chi_Minh' date '+%d/%m/%Y %H:%M')"
+            git push
+          else
+            echo "Không có thay đổi để commit."
+          fi
