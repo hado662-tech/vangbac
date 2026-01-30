@@ -632,8 +632,14 @@
         </div>
     </footer>
 
-    <script src="prices.js"></script>
-    <script src="script.js"></script>
+    <!-- Cache Busting: Ép trình duyệt luôn lấy dữ liệu mới nhất -->
+    <script>
+        (function () {
+            const v = Date.now();
+            document.write('<script src="prices.js?v=' + v + '"><\/script>');
+            document.write('<script src="script.js?v=' + v + '"><\/script>');
+        })();
+    </script>
 </body>
 
 </html>
