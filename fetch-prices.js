@@ -1,15 +1,17 @@
-const puppeteer = require('puppeteer');
+const axios = require('axios');
+const cheerio = require('cheerio');
 const fs = require('fs');
 
 // Cấu hình
 const CONFIG = {
-    timeout: 60000,
+    timeout: 30000,
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 };
 
 // Giá mặc định (fallback)
 let currentPrices = {
-    lastUpdate: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    // Thời gian sẽ được cập nhật khi chạy
+    lastUpdate: "",
     quyTung: {
         nhanTronTron: { buy: 16702, sell: 17298 },
         nhanEpVi: { buy: 16702, sell: 17298 },
@@ -46,8 +48,8 @@ let currentPrices = {
 async function fetchExternalAPI() {
     try {
         console.log('📡 Đang gọi API: https://apigold.vercel.app/api/gold-prices ...');
-        const response = await fetch('https://apigold.vercel.app/api/gold-prices');
-        const json = await response.json();
+        const response = await axios.get('https://apigold.vercel.app/api/gold-prices', { timeout: 10000 });
+        const json = response.data;
 
         if (json && json.data) {
             console.log('✅ API: Lấy dữ liệu thành công');
@@ -103,46 +105,44 @@ async function fetchExternalAPI() {
     return false;
 }
 
-async function scrapeData() {
-    console.log('🚀 Khởi động Browser...');
-    const browser = await puppeteer.launch({
-        headless: "new",
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu']
-    });
-
-    const page = await browser.newPage();
-    await page.setUserAgent(CONFIG.userAgent);
-    await page.setViewport({ width: 1366, height: 768 });
-
+// Thay thế Puppeteer bằng Axios + Cheerio (Nhẹ hơn gấp 10 lần)
+async function scrapeKimTin() {
     try {
-        console.log('📡 Truy cập Kim Tín (Scraper)...');
-        await page.goto('https://kimtin.vn/bieu-do-gia-vang', { waitUntil: 'networkidle2', timeout: CONFIG.timeout });
+        console.log('� Fetching Kim Tín (Axios/Cheerio)...');
+        const response = await axios.get('https://kimtin.vn/bieu-do-gia-vang', {
+            headers: { 'User-Agent': CONFIG.userAgent },
+            timeout: 10000
+        });
 
-        const kimTinData = await page.evaluate(() => {
-            const results = { nhanTron: null, sjc: null, trangSuc18K: null };
-            const rows = document.querySelectorAll('.table-price table tbody tr');
+        const $ = cheerio.load(response.data);
+        const rows = $('.table-price table tbody tr');
 
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                let typeText = "";
-                let buyIdx = -1;
-                let sellIdx = -1;
+        const results = { nhanTron: null, sjc: null, trangSuc18K: null };
 
-                if (cells.length === 5) {
-                    typeText = cells[1].innerText.toUpperCase();
-                    buyIdx = 3;
-                    sellIdx = 4;
-                } else if (cells.length === 4) {
-                    typeText = cells[0].innerText.toUpperCase();
-                    buyIdx = 2;
-                    sellIdx = 3;
-                }
+        rows.each((i, row) => {
+            const cells = $(row).find('td');
+            let typeText = "";
+            let buyIdx = -1;
+            let sellIdx = -1;
 
-                if (buyIdx !== -1) {
-                    const buyText = cells[buyIdx].innerText;
-                    const sellText = cells[sellIdx].innerText;
-                    const buy = parseInt(buyText.replace(/\D/g, ''));
-                    const sell = parseInt(sellText.replace(/\D/g, ''));
+            if (cells.length === 5) {
+                typeText = $(cells[1]).text().toUpperCase();
+                buyIdx = 3;
+                sellIdx = 4;
+            } else if (cells.length === 4) {
+                typeText = $(cells[0]).text().toUpperCase();
+                buyIdx = 2;
+                sellIdx = 3;
+            }
+
+            if (buyIdx !== -1) {
+                const buyText = $(cells[buyIdx]).text();
+                const sellText = $(cells[sellIdx]).text();
+                const buy = parseInt(buyText.replace(/\D/g, ''));
+                const sell = parseInt(sellText.replace(/\D/g, ''));
+
+                if (!isNaN(buy) && !isNaN(sell)) {
+                    console.log(`🔍 Found: ${typeText} | ${buy} - ${sell}`);
 
                     if (typeText.includes('NHẪN TRÒN')) {
                         results.nhanTron = { buy, sell };
@@ -152,52 +152,27 @@ async function scrapeData() {
                         results.trangSuc18K = { buy, sell };
                     }
                 }
-            });
-            return results;
+            }
         });
 
-        if (kimTinData.nhanTron) {
-            currentPrices.kimTin.nhanTronTron = kimTinData.nhanTron;
-            currentPrices.kimTin.nhanEpVi = kimTinData.nhanTron;
-            currentPrices.kimTin.quaMung = kimTinData.nhanTron;
+        if (results.nhanTron) {
+            currentPrices.kimTin.nhanTronTron = results.nhanTron;
+            currentPrices.kimTin.nhanEpVi = results.nhanTron;
+            currentPrices.kimTin.quaMung = results.nhanTron;
             console.log('✅ Kim Tín: Đã cập nhật Nhẫn Tròn');
         }
-        if (kimTinData.sjc) {
-            currentPrices.kimTin.sjc = kimTinData.sjc;
+        if (results.sjc) {
+            currentPrices.kimTin.sjc = results.sjc;
             console.log('✅ Kim Tín: Đã cập nhật SJC');
         }
-        if (kimTinData.trangSuc18K) {
-            currentPrices.kimTin.trangSuc18K = kimTinData.trangSuc18K;
+        if (results.trangSuc18K) {
+            currentPrices.kimTin.trangSuc18K = results.trangSuc18K;
             console.log('✅ Kim Tín: Đã cập nhật Trang sức 18K');
         }
-    } catch (e) {
-        console.log('⚠️ Kim Tín: Lỗi Scraper -', e.message);
-    }
 
-    if (!currentPrices.sjc.sjc1L.buy) {
-        try {
-            await page.goto('https://sjc.com.vn/giavang/textContent.php', { waitUntil: 'domcontentloaded' });
-            const sjcData = await page.evaluate(() => {
-                const prices = { sjc1L: {}, nhan9999: {}, nuTrang: {} };
-                document.querySelectorAll('tr').forEach(row => {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length >= 3) {
-                        const name = cells[0].innerText.toLowerCase();
-                        const buy = parseInt(cells[1].innerText.replace(/\D/g, ''));
-                        const sell = parseInt(cells[2].innerText.replace(/\D/g, ''));
-                        if (!isNaN(buy) && !isNaN(sell)) {
-                            if (name.includes('sjc') && name.includes('1l')) prices.sjc1L = { buy: Math.round(buy / 10), sell: Math.round(sell / 10) };
-                            if (name.includes('nhẫn') && name.includes('99.99')) prices.nhan9999 = { buy: Math.round(buy / 10), sell: Math.round(sell / 10) };
-                            if (name.includes('nữ trang') && name.includes('99.99')) prices.nuTrang = { buy: Math.round(buy / 10), sell: Math.round(sell / 10) };
-                        }
-                    }
-                });
-                return prices;
-            });
-            if (sjcData.sjc1L.buy) currentPrices.sjc = { ...currentPrices.sjc, ...sjcData };
-        } catch (e) { }
+    } catch (e) {
+        console.error('⚠️ Kim Tín Scrape Error:', e.message);
     }
-    await browser.close();
 }
 
 function syncLocalPrices() {
@@ -352,49 +327,14 @@ function renderPriceTable(id, key) {
         c.appendChild(row);
     });
 }
-
-function renderAllTables() {
-    ['quyTung', 'kimTin', 'btmc', 'sjc', 'pnj', 'doji'].forEach(k => renderPriceTable(k + 'Prices', k));
-}
-
-function updateUnitLabels() {
-    const config = UNIT_CONFIG[currentUnit];
-    const ud = document.getElementById('unitDescription');
-    if (ud) ud.textContent = "Giá theo " + config.label;
-    document.querySelectorAll('.price-table th .unit').forEach(el => el.textContent = config.shortLabel);
-}
-
-function updateLastUpdateTime() {
-    const el = document.getElementById('lastUpdate');
-    if (el) el.textContent = LAST_UPDATE;
-}
-
-function initUnitSwitcher() {
-    document.querySelectorAll('.unit-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            document.querySelectorAll('.unit-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            currentUnit = this.dataset.unit;
-            renderAllTables();
-            updateUnitLabels();
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initUnitSwitcher();
-    renderAllTables();
-    updateUnitLabels();
-    updateLastUpdateTime();
-});
 `;
     fs.writeFileSync('prices.js', pricesContent, 'utf8');
 }
 
 async function main() {
-    console.log('🚀 Bắt đầu lấy giá vàng...');
+    console.log('🚀 Bắt đầu lấy giá vàng (Lite Mode)...');
     await fetchExternalAPI();
-    await scrapeData();
+    await scrapeKimTin();
     syncLocalPrices();
     writePricesFile();
     console.log('✅ Hoàn thành cập nhật giá!');

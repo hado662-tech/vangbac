@@ -3,7 +3,7 @@
 // Nguồn: BTMC, SJC, DOJI + tham khảo Kim Tín
 // ==========================================
 
-const LAST_UPDATE = "21:08 30/01/2026";
+const LAST_UPDATE = "21:23 30/01/2026";
 
 const GOLD_PRICES = {
     quyTung: {
@@ -103,38 +103,3 @@ function renderPriceTable(id, key) {
         c.appendChild(row);
     });
 }
-
-function renderAllTables() {
-    ['quyTung', 'kimTin', 'btmc', 'sjc', 'pnj', 'doji'].forEach(k => renderPriceTable(k + 'Prices', k));
-}
-
-function updateUnitLabels() {
-    const config = UNIT_CONFIG[currentUnit];
-    const ud = document.getElementById('unitDescription');
-    if (ud) ud.textContent = "Giá theo " + config.label;
-    document.querySelectorAll('.price-table th .unit').forEach(el => el.textContent = config.shortLabel);
-}
-
-function updateLastUpdateTime() {
-    const el = document.getElementById('lastUpdate');
-    if (el) el.textContent = LAST_UPDATE;
-}
-
-function initUnitSwitcher() {
-    document.querySelectorAll('.unit-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            document.querySelectorAll('.unit-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            currentUnit = this.dataset.unit;
-            renderAllTables();
-            updateUnitLabels();
-        });
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    initUnitSwitcher();
-    renderAllTables();
-    updateUnitLabels();
-    updateLastUpdateTime();
-});
