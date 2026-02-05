@@ -3,7 +3,7 @@
 // Nguồn: BTMC, SJC, DOJI + tham khảo Kim Tín
 // ==========================================
 
-const LAST_UPDATE = "12:42 01/02/2026";
+const LAST_UPDATE = "08:55 05/02/2026";
 
 const GOLD_PRICES = {
     "quyTung": {
@@ -17,24 +17,24 @@ const GOLD_PRICES = {
                 "desc": "Vàng 999.9 nguyên chất",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16482,
-                "sell": 16918
+                "buy": 16682,
+                "sell": 17318
             },
             {
                 "name": "Nhẫn tròn ép vỉ",
                 "desc": "Vàng 999.9 nguyên chất",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16482,
-                "sell": 16918
+                "buy": 16682,
+                "sell": 17318
             },
             {
                 "name": "Vàng miếng SJC",
                 "desc": "Vàng miếng chính hãng SJC",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16882,
-                "sell": 17618
+                "buy": 17582,
+                "sell": 18180
             },
             {
                 "name": "Trang sức 18K",
@@ -57,32 +57,32 @@ const GOLD_PRICES = {
                 "desc": "Vàng Rồng Kim Tín 999.9",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16502,
-                "sell": 16898
+                "buy": 16702,
+                "sell": 17298
             },
             {
                 "name": "Nhẫn tròn ép vỉ",
                 "desc": "Vàng Rồng Kim Tín 999.9",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16502,
-                "sell": 16898
+                "buy": 16702,
+                "sell": 17298
             },
             {
                 "name": "Quà mừng vàng",
                 "desc": "Vàng Rồng Kim Tín 999.9",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16502,
-                "sell": 16898
+                "buy": 16702,
+                "sell": 17298
             },
             {
                 "name": "Vàng miếng SJC",
                 "desc": "Vàng miếng chính hãng SJC",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16902,
-                "sell": 17598
+                "buy": 17602,
+                "sell": 18160
             },
             {
                 "name": "Trang sức 18K",
@@ -107,8 +107,8 @@ const GOLD_PRICES = {
                 "desc": "Vàng nhẫn tròn trơn BTMC",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16467,
-                "sell": 16933
+                "buy": 16667,
+                "sell": 17333
             },
             {
                 "name": "Nhẫn Rồng Phụng",
@@ -123,8 +123,8 @@ const GOLD_PRICES = {
                 "desc": "Vàng miếng SJC chính hãng",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16867,
-                "sell": 17633
+                "buy": 17567,
+                "sell": 18195
             }
         ]
     },
@@ -141,16 +141,16 @@ const GOLD_PRICES = {
                 "desc": "Vàng miếng SJC 1 lượng",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16867,
-                "sell": 17633
+                "buy": 17567,
+                "sell": 18195
             },
             {
                 "name": "Vàng nhẫn SJC 99.99",
                 "desc": "Nhẫn tròn trơn SJC",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16467,
-                "sell": 16933
+                "buy": 16667,
+                "sell": 17333
             },
             {
                 "name": "Vàng nữ trang 99.99",
@@ -174,16 +174,16 @@ const GOLD_PRICES = {
                 "desc": "Vàng miếng SJC chính hãng",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16852,
-                "sell": 17648
+                "buy": 17552,
+                "sell": 18210
             },
             {
                 "name": "Nhẫn tròn PNJ 24K",
                 "desc": "Nhẫn vàng 999.9 PNJ",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16452,
-                "sell": 16948
+                "buy": 16652,
+                "sell": 17348
             }
         ]
     },
@@ -199,16 +199,16 @@ const GOLD_PRICES = {
                 "desc": "Vàng miếng DOJI",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16852,
-                "sell": 17648
+                "buy": 17552,
+                "sell": 18210
             },
             {
                 "name": "Nhẫn tròn DOJI",
                 "desc": "Nhẫn vàng 999.9 DOJI",
                 "purity": "999.9",
                 "purityLabel": "24K",
-                "buy": 16452,
-                "sell": 16948
+                "buy": 16652,
+                "sell": 17348
             }
         ]
     }
